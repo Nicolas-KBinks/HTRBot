@@ -218,7 +218,8 @@ void SessionManager::SL_OnNetMG_Finished(QNetworkReply *rep)
 
           if (o.keys().contains("accountId")) {
             Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
-                                      o.constFind("accountName").value().toString().toUtf8(), this);
+                                      o.constFind("accountName").value().toString().toUtf8(),
+                                      o.constFind("accountType").value().toString().toUtf8(), this);
 
             _accounts.append(ac);
           }
