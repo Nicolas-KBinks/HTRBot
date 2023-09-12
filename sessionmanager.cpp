@@ -205,25 +205,47 @@ void SessionManager::SL_OnNetMG_Finished(QNetworkReply *rep)
           obj_it = obj.constBegin(),
           obj_ite = obj.constEnd();
 
+      QJsonObject obj_account_info = obj.value("accountInfo").toObject();
+
+      double
+          available = obj_account_info.value("available").toDouble(),
+          balance = obj_account_info.value("balance").toDouble(),
+          deposit = obj_account_info.value("deposit").toDouble(),
+          profitLoss = obj_account_info.value("profitLoss").toDouble();
+
+      QByteArray currency = obj.value("currencyIsoCode").toString().toUtf8();
+
+      QByteArray currentAccountID = obj.value("currentAccountId").toString().toUtf8();
+
+
       for (; obj_it != obj_ite; obj_it++) {
 
-        if (!(*obj_it).isArray())
-          continue;
+        if ((*obj_it).isArray()) {
 
-        QJsonValue val((*obj_it));
-        QJsonArray ar = val.toArray();
+          QJsonValue val((*obj_it));
+          QJsonArray ar = val.toArray();
 
-        for (int n = 0; n < ar.size(); n++) {
-          QJsonObject o = ar.at(n).toObject();
+          for (int n = 0; n < ar.size(); n++) {
+            QJsonObject o = ar.at(n).toObject();
 
-          if (o.keys().contains("accountId")) {
-            Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
-                                      o.constFind("accountName").value().toString().toUtf8(),
-                                      o.constFind("accountType").value().toString().toUtf8(), this);
+            if (o.keys().contains("accountId")) {
+              Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
+                                        o.constFind("accountName").value().toString().toUtf8(),
+                                        o.constFind("accountType").value().toString().toUtf8(),
+                                        o.constFind("preferred").value().toBool(), this);
 
-            _accounts.append(ac);
-          }
-        } // end of iteration through json array
+              if (ac->GetID().compare(currentAccountID, Qt::CaseSensitive) == 0) {
+                ac->SetBalance(balance);
+                ac->SetDeposit(deposit);
+                ac->SetProfitLoss(profitLoss);
+                ac->SetAvailable(available);
+                ac->SetCurrency(currency);
+              }
+
+              _accounts.append(ac);
+            }
+          } // end of iteration through json array
+        } // end of if array
       } // end of iteration through doc object
     } // end of doc.isObject
 
