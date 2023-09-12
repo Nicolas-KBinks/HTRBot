@@ -172,27 +172,16 @@ void SessionManager::SL_OnNetMG_Finished(QNetworkReply *rep)
 
 
   // handles reply from server upon session created:
+
   if (!this->IsCreated() && _current_req == REQUEST_CODE::CREATE) {
+
     // extract security token and CST:
-    QList<QNetworkReply::RawHeaderPair> rawHeaders = rep->rawHeaderPairs();
-    QList<QNetworkReply::RawHeaderPair>::const_iterator
-        it = rawHeaders.constBegin(),
-        ite = rawHeaders.constEnd();
+    if (rep->hasRawHeader("X-SECURITY-TOKEN"))
+      this->SetSecurityToken(rep->rawHeader("X-SECURITY-TOKEN"));
 
-    for (int counter = 0; it != ite; ++it) {
-      if ((*it).first.compare("X-SECURITY-TOKEN", Qt::CaseSensitive) == 0) {
-        this->SetSecurityToken((*it).second);
-        counter++;
-      }
+    if (rep->hasRawHeader("CST"))
+      this->SetCST(rep->rawHeader("CST"));
 
-      if ((*it).first.compare("CST", Qt::CaseSensitive) == 0) {
-        this->SetCST((*it).second);
-        counter++;
-      }
-
-      if (counter == 2)
-        break;
-    }
 
     // retrieves and extracts datas from reply:
     QByteArray datas = rep->readAll();
@@ -200,53 +189,43 @@ void SessionManager::SL_OnNetMG_Finished(QNetworkReply *rep)
     QJsonDocument doc = QJsonDocument::fromJson(datas, &err);
 
     if (doc.isObject()) {
-      QJsonObject obj = doc.object();
-      QJsonObject::const_iterator
-          obj_it = obj.constBegin(),
-          obj_ite = obj.constEnd();
+      QJsonObject
+          obj = doc.object(),
+          obj_account_info = obj.value("accountInfo").toObject();
 
-      QJsonObject obj_account_info = obj.value("accountInfo").toObject();
-
+      // extract current account infos:
       double
           available = obj_account_info.value("available").toDouble(),
           balance = obj_account_info.value("balance").toDouble(),
           deposit = obj_account_info.value("deposit").toDouble(),
           profitLoss = obj_account_info.value("profitLoss").toDouble();
 
-      QByteArray currency = obj.value("currencyIsoCode").toString().toUtf8();
+      QByteArray
+          currency = obj.value("currencyIsoCode").toString().toUtf8(),
+          currentAccountID = obj.value("currentAccountId").toString().toUtf8();
 
-      QByteArray currentAccountID = obj.value("currentAccountId").toString().toUtf8();
+      // extract accounts list:
+      QJsonArray ar_accounts = obj.value("accounts").toArray();
 
+      for (int n = 0; n < ar_accounts.size(); n++) {
+        QJsonObject o = ar_accounts.at(n).toObject();
 
-      for (; obj_it != obj_ite; obj_it++) {
+        Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
+                                  o.constFind("accountName").value().toString().toUtf8(),
+                                  o.constFind("accountType").value().toString().toUtf8(),
+                                  o.constFind("preferred").value().toBool(), this);
 
-        if ((*obj_it).isArray()) {
+        if (ac->GetID().compare(currentAccountID, Qt::CaseSensitive) == 0) {
+          ac->SetBalance(balance);
+          ac->SetDeposit(deposit);
+          ac->SetProfitLoss(profitLoss);
+          ac->SetAvailable(available);
+          ac->SetCurrency(currency);
+        }
 
-          QJsonValue val((*obj_it));
-          QJsonArray ar = val.toArray();
+        _accounts.append(ac);
+      } // end of iteration through accounts list
 
-          for (int n = 0; n < ar.size(); n++) {
-            QJsonObject o = ar.at(n).toObject();
-
-            if (o.keys().contains("accountId")) {
-              Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
-                                        o.constFind("accountName").value().toString().toUtf8(),
-                                        o.constFind("accountType").value().toString().toUtf8(),
-                                        o.constFind("preferred").value().toBool(), this);
-
-              if (ac->GetID().compare(currentAccountID, Qt::CaseSensitive) == 0) {
-                ac->SetBalance(balance);
-                ac->SetDeposit(deposit);
-                ac->SetProfitLoss(profitLoss);
-                ac->SetAvailable(available);
-                ac->SetCurrency(currency);
-              }
-
-              _accounts.append(ac);
-            }
-          } // end of iteration through json array
-        } // end of if array
-      } // end of iteration through doc object
     } // end of doc.isObject
 
 
