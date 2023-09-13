@@ -6,12 +6,14 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QTextEdit>
 
 #include <QNetworkAccessManager>
 
 #include <QThread>
 #include <QTimer>
 
+#include "logsmanager.h"
 #include "sessionmanager.h"
 
 
@@ -29,9 +31,17 @@ public:
   ~MWin();
 
 
+private slots:
+  void SL_ProcessLogsBatch();
+
+
 private:
   Ui::MWin *ui;
   QGridLayout *_lay = nullptr;
+  QTextEdit *_logs_ui = nullptr;
+
+  LogsManager *_logs_mg = nullptr;
+  QTimer *_logs_timer = nullptr;
 
   QNetworkAccessManager *_netmg = nullptr;
   SessionManager *_session_mg = nullptr;
