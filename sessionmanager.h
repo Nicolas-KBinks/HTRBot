@@ -67,6 +67,13 @@ private slots:
 
 
 private:
+  // functions:
+  void HandleNetReply_SessionCreated(QNetworkReply *rep);
+  void HandleNetReply_SessionLogout(QNetworkReply *rep);
+  void HandleNetReply_AccountSwitched(QNetworkReply *rep);
+  void HandleNetReply_SessionDetails(QNetworkReply *rep);
+
+
   // network access manager:
   QSharedPointer<QNetworkAccessManager*> _ptr_netmg;
   bool _initialized = false;

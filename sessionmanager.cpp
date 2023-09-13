@@ -172,85 +172,125 @@ void SessionManager::SL_OnNetMG_Finished(QNetworkReply *rep)
 
 
   // handles reply from server upon session created:
-
-  if (!this->IsCreated() && _current_req == REQUEST_CODE::CREATE) {
-
-    // extract security token and CST:
-    if (rep->hasRawHeader("X-SECURITY-TOKEN"))
-      this->SetSecurityToken(rep->rawHeader("X-SECURITY-TOKEN"));
-
-    if (rep->hasRawHeader("CST"))
-      this->SetCST(rep->rawHeader("CST"));
-
-
-    // retrieves and extracts datas from reply:
-    QByteArray datas = rep->readAll();
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(datas, &err);
-
-    if (doc.isObject()) {
-      QJsonObject
-          obj = doc.object(),
-          obj_account_info = obj.value("accountInfo").toObject();
-
-      // extract current account infos:
-      double
-          available = obj_account_info.value("available").toDouble(),
-          balance = obj_account_info.value("balance").toDouble(),
-          deposit = obj_account_info.value("deposit").toDouble(),
-          profitLoss = obj_account_info.value("profitLoss").toDouble();
-
-      QByteArray
-          currency = obj.value("currencyIsoCode").toString().toUtf8(),
-          currentAccountID = obj.value("currentAccountId").toString().toUtf8();
-
-      // extract accounts list:
-      QJsonArray ar_accounts = obj.value("accounts").toArray();
-
-      for (int n = 0; n < ar_accounts.size(); n++) {
-        QJsonObject o = ar_accounts.at(n).toObject();
-
-        Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
-                                  o.constFind("accountName").value().toString().toUtf8(),
-                                  o.constFind("accountType").value().toString().toUtf8(),
-                                  o.constFind("preferred").value().toBool(), this);
-
-        if (ac->GetID().compare(currentAccountID, Qt::CaseSensitive) == 0) {
-          ac->SetBalance(balance);
-          ac->SetDeposit(deposit);
-          ac->SetProfitLoss(profitLoss);
-          ac->SetAvailable(available);
-          ac->SetCurrency(currency);
-        }
-
-        _accounts.append(ac);
-      } // end of iteration through accounts list
-
-    } // end of doc.isObject
-
-
-    _created = true;
-    _current_req = REQUEST_CODE::NONE;
-
-    qDebug().noquote() << QString("[SessionManager 0x%1] : session created")
-                              .arg((qint64)(this), 8, 16, QChar('0'));
-  } // end of session created
-
+  if (!this->IsCreated() && _current_req == REQUEST_CODE::CREATE)
+    this->HandleNetReply_SessionCreated(rep);
 
   // session destroyed:
-  if (this->IsCreated() && _current_req == REQUEST_CODE::LOGOUT) {
-    this->SetSecurityToken("");
-    this->SetCST("");
-
-    _created = false;
-    _current_req = REQUEST_CODE::NONE;
-
-    qDebug().noquote() << QString("[SessionManager 0x%1] : session destroyed")
-                              .arg((qint64)(this), 8, 16, QChar('0'));
-  }
+  if (this->IsCreated() && _current_req == REQUEST_CODE::LOGOUT)
+    this->HandleNetReply_SessionLogout(rep);
 }
 
 /* ================ end of private slots ================ */
+
+
+/* ================ private functions ================ */
+
+// handles reply to - create session:
+void SessionManager::HandleNetReply_SessionCreated(QNetworkReply *rep)
+{
+  if (!rep)
+    return;
+
+  // extract security token and CST:
+  if (rep->hasRawHeader("X-SECURITY-TOKEN"))
+    this->SetSecurityToken(rep->rawHeader("X-SECURITY-TOKEN"));
+
+  if (rep->hasRawHeader("CST"))
+    this->SetCST(rep->rawHeader("CST"));
+
+
+  // retrieves and extracts datas from reply:
+  QByteArray datas = rep->readAll();
+  QJsonParseError err;
+  QJsonDocument doc = QJsonDocument::fromJson(datas, &err);
+
+  if (doc.isObject()) {
+    QJsonObject
+        obj = doc.object(),
+        obj_account_info = obj.value("accountInfo").toObject();
+
+    // extract current account infos:
+    double
+        available = obj_account_info.value("available").toDouble(),
+        balance = obj_account_info.value("balance").toDouble(),
+        deposit = obj_account_info.value("deposit").toDouble(),
+        profitLoss = obj_account_info.value("profitLoss").toDouble();
+
+    QByteArray
+        currency = obj.value("currencyIsoCode").toString().toUtf8(),
+        currentAccountID = obj.value("currentAccountId").toString().toUtf8();
+
+    // extract accounts list:
+    QJsonArray ar_accounts = obj.value("accounts").toArray();
+
+    for (int n = 0; n < ar_accounts.size(); n++) {
+      QJsonObject o = ar_accounts.at(n).toObject();
+
+      Account *ac = new Account(o.constFind("accountId").value().toString().toUtf8(),
+                                o.constFind("accountName").value().toString().toUtf8(),
+                                o.constFind("accountType").value().toString().toUtf8(),
+                                o.constFind("preferred").value().toBool(), this);
+
+      // check if account already presents in accounts list:
+      if (_accounts.contains(ac)) {
+        delete ac;
+        ac = nullptr;
+        continue;
+      }
+
+      if (ac->GetID().compare(currentAccountID, Qt::CaseSensitive) == 0) {
+        ac->SetBalance(balance);
+        ac->SetDeposit(deposit);
+        ac->SetProfitLoss(profitLoss);
+        ac->SetAvailable(available);
+        ac->SetCurrency(currency);
+      }
+
+      _accounts.append(ac);
+    } // end of iteration through accounts list
+
+  } // end of doc.isObject
+
+
+  _created = true;
+  _current_req = REQUEST_CODE::NONE;
+
+  qDebug().noquote() << QString("[SessionManager 0x%1] : session created")
+                            .arg((qint64)(this), 8, 16, QChar('0'));
+}
+
+
+// handles reply to - get session details:
+void SessionManager::HandleNetReply_SessionDetails(QNetworkReply */*rep*/)
+{
+}
+
+
+// handles reply to - switch account:
+void SessionManager::HandleNetReply_AccountSwitched(QNetworkReply */*rep*/)
+{
+}
+
+
+// handles reply to - logout:
+void SessionManager::HandleNetReply_SessionLogout(QNetworkReply *rep)
+{
+  // to be sure nothing stays in io-device buffer:
+  rep->readAll();
+
+
+  // cleaning up security token and cst and reset session status:
+  this->SetSecurityToken("");
+  this->SetCST("");
+
+  _created = false;
+  _current_req = REQUEST_CODE::NONE;
+
+  qDebug().noquote() << QString("[SessionManager 0x%1] : session destroyed")
+                            .arg((qint64)(this), 8, 16, QChar('0'));
+}
+
+/* ================ end of private functions ================ */
 
 
 
