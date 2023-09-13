@@ -25,16 +25,18 @@ void SessionManager::SL_Init()
   if (_initialized)
     return;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : initializing..")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "intializing session manager..", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : initializing..")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 
   if (!_ptr_netmg.isNull())
     connect((*_ptr_netmg), &QNetworkAccessManager::finished, this, &SessionManager::SL_OnNetMG_Finished);
 
   _initialized = true;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : initialized")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "session manager initialized", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : initialized")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 }
 
 
@@ -46,8 +48,9 @@ void SessionManager::SL_Create(const QByteArray &identifier, const QByteArray &p
 
   _current_req = REQUEST_CODE::CREATE;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : request session create")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "request session create..", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : request session create")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 
   // create request and set rawHeaders:
   QNetworkRequest req(QString("%1/api/v1/session").arg(DEMO_URL_API));
@@ -78,8 +81,9 @@ void SessionManager::SL_Details()
 
   _current_req = REQUEST_CODE::DETAILS;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : request session details")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "request session details..", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : request session details")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 
   // create request and set rawHeaders:
   QNetworkRequest req(QString("%1/api/v1/session").arg(DEMO_URL_API));
@@ -100,8 +104,9 @@ void SessionManager::SL_Switch(const QSharedPointer<Account*> &account)
 
   _current_req = REQUEST_CODE::SWITCH_ACCOUNT;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : request session switch account")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "request switch account..", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : request session switch account")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 
   // create request and set rawHeaders:
   QNetworkRequest req(QString("%1/api/v1/session").arg(DEMO_URL_API));
@@ -129,8 +134,9 @@ void SessionManager::SL_Logout()
 
   _current_req = REQUEST_CODE::LOGOUT;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : request session logout")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "request session logout..", QDateTime::currentMSecsSinceEpoch());
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : request session logout")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 
   QNetworkRequest req(QString("%1/api/v1/session").arg(DEMO_URL_API));
 
@@ -255,8 +261,10 @@ void SessionManager::HandleNetReply_SessionCreated(QNetworkReply *rep)
   _created = true;
   _current_req = REQUEST_CODE::NONE;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : session created")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "session created", QDateTime::currentMSecsSinceEpoch());
+
+  /*qDebug().noquote() << QString("[SessionManager 0x%1] : session created")
+                            .arg((qint64)(this), 8, 16, QChar('0'));*/
 }
 
 
@@ -286,8 +294,7 @@ void SessionManager::HandleNetReply_SessionLogout(QNetworkReply *rep)
   _created = false;
   _current_req = REQUEST_CODE::NONE;
 
-  qDebug().noquote() << QString("[SessionManager 0x%1] : session destroyed")
-                            .arg((qint64)(this), 8, 16, QChar('0'));
+  emit SI_AddLog(Log::TYPE::INFO, "session logged out", QDateTime::currentMSecsSinceEpoch());
 }
 
 /* ================ end of private functions ================ */

@@ -18,6 +18,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
+#include "log.h"
 #include "account.h"
 
 
@@ -51,6 +52,10 @@ public:
   const QByteArray & GetSecurityToken() const;
   const QByteArray & GetCST() const;
   const bool & IsCreated() const;
+
+
+signals:
+  void SI_AddLog(const Log::TYPE &type, const QByteArray &content, const qint64 &timestamp);
 
 
 public slots:
