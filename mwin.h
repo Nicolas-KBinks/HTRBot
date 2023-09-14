@@ -40,6 +40,9 @@ private:
   void Create_LogsManager();
   void Destroy_LogsManager();
 
+  void Create_SessionManager();
+  void Destroy_SessionManager();
+
   // -- variables -- //
   Ui::MWin *ui;
   QGridLayout *_lay = nullptr;
@@ -50,6 +53,11 @@ private:
     QTimer      *tm = nullptr;
     LogsManager *mg = nullptr;
   } _logs;
+
+  struct {
+    QThread         *th = nullptr;
+    SessionManager  *mg = nullptr;
+  } _session;
 
   QNetworkAccessManager *_netmg = nullptr;
   SessionManager *_session_mg = nullptr;

@@ -10,15 +10,10 @@ MWin::MWin(QWidget *parent)
 {
   ui->setupUi(this);
 
-  this->Create_LogsManager();
-
-  // create networkAccessManager object and session manager:
   _netmg = new QNetworkAccessManager(this);
-  _session_mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg), this);
 
-  connect(_session_mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
-
-  QTimer::singleShot(0, _session_mg, &SessionManager::SL_Init);
+  this->Create_LogsManager();
+  this->Create_SessionManager();
 
   // create MWin UI:
   _lay = new QGridLayout();
@@ -40,6 +35,7 @@ MWin::MWin(QWidget *parent)
 
 MWin::~MWin()
 {
+  this->Destroy_SessionManager();
   this->Destroy_LogsManager();
 
   delete ui;
@@ -66,7 +62,6 @@ void MWin::Create_LogsManager()
   _logs.tm->start();
 }
 
-
 void MWin::Destroy_LogsManager()
 {
   if (_logs.th) {
@@ -77,6 +72,38 @@ void MWin::Destroy_LogsManager()
 
     delete _logs.th;
     _logs.th = nullptr;
+  }
+}
+
+
+
+void MWin::Create_SessionManager()
+{
+  if (_session.th && _session.mg)
+    return;
+
+  _session.th = new QThread();
+  _session.mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg), nullptr);
+
+  connect(_session.th, &QThread::finished, _session.mg, &SessionManager::deleteLater);
+  connect(_session.mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
+
+  _session.mg->moveToThread(_session.th);
+  _session.th->start();
+
+  QTimer::singleShot(0, _session.mg, &SessionManager::SL_Init);
+}
+
+void MWin::Destroy_SessionManager()
+{
+  if (_session.th) {
+    if (_session.th->isRunning()) {
+      _session.th->quit();
+      _session.th->wait();
+    }
+
+    delete _session.th;
+    _session.th = nullptr;
   }
 }
 
