@@ -40,7 +40,7 @@ MWin::MWin(QWidget *parent)
 
   // test session create:
   QTimer::singleShot(5000, _session_mg, std::bind(&SessionManager::SL_Create, _session_mg,
-                                                  "nicolascrpt@gmail.com", "c3qP7YtCEed4K8H!", false));
+                                                  "", "", false));
 
   // test session logout:
   QTimer::singleShot(10000, _session_mg, &SessionManager::SL_Logout);

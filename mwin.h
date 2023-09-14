@@ -13,8 +13,8 @@
 #include <QThread>
 #include <QTimer>
 
-#include "logsmanager.h"
-#include "sessionmanager.h"
+#include "Logs/logsmanager.h"
+#include "Session/sessionmanager.h"
 
 
 QT_BEGIN_NAMESPACE
