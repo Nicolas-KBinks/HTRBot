@@ -36,12 +36,20 @@ private slots:
 
 
 private:
+  // -- functions -- //
+  void Create_LogsManager();
+  void Destroy_LogsManager();
+
+  // -- variables -- //
   Ui::MWin *ui;
   QGridLayout *_lay = nullptr;
   QTextEdit *_logs_ui = nullptr;
 
-  LogsManager *_logs_mg = nullptr;
-  QTimer *_logs_timer = nullptr;
+  struct {
+    QThread     *th = nullptr;
+    QTimer      *tm = nullptr;
+    LogsManager *mg = nullptr;
+  } _logs;
 
   QNetworkAccessManager *_netmg = nullptr;
   SessionManager *_session_mg = nullptr;

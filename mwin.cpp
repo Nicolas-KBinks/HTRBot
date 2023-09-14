@@ -10,22 +10,13 @@ MWin::MWin(QWidget *parent)
 {
   ui->setupUi(this);
 
-
-  // create logs manager:
-  _logs_mg = new LogsManager(this);
-  _logs_timer = new QTimer(this);
-
-  connect(_logs_timer, &QTimer::timeout, this, &MWin::SL_ProcessLogsBatch);
-
-  _logs_timer->setInterval(5);
-  _logs_timer->start();
-
+  this->Create_LogsManager();
 
   // create networkAccessManager object and session manager:
   _netmg = new QNetworkAccessManager(this);
   _session_mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg), this);
 
-  connect(_session_mg, &SessionManager::SI_AddLog, _logs_mg, &LogsManager::SL_AddLog);
+  connect(_session_mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
 
   QTimer::singleShot(0, _session_mg, &SessionManager::SL_Init);
 
@@ -49,19 +40,52 @@ MWin::MWin(QWidget *parent)
 
 MWin::~MWin()
 {
-  if (_logs_timer && _logs_timer->isActive()) {
-    _logs_timer->stop();
-  }
+  this->Destroy_LogsManager();
 
   delete ui;
+}
+
+
+void MWin::Create_LogsManager()
+{
+  if (_logs.th && _logs.tm && _logs.mg)
+    return;
+
+  _logs.th = new QThread();
+  _logs.tm = new QTimer();
+  _logs.mg = new LogsManager();
+
+  connect(_logs.th, &QThread::finished, _logs.tm, &QTimer::deleteLater);
+  connect(_logs.th, &QThread::finished, _logs.mg, &LogsManager::deleteLater);
+  connect(_logs.tm, &QTimer::timeout, this, &MWin::SL_ProcessLogsBatch);
+
+  _logs.tm->setInterval(5);
+  _logs.mg->moveToThread(_logs.th);
+
+  _logs.th->start();
+  _logs.tm->start();
+}
+
+
+void MWin::Destroy_LogsManager()
+{
+  if (_logs.th) {
+    if (_logs.th->isRunning()) {
+      _logs.th->quit();
+      _logs.th->wait();
+    }
+
+    delete _logs.th;
+    _logs.th = nullptr;
+  }
 }
 
 
 
 void MWin::SL_ProcessLogsBatch()
 {
-  if (_logs_mg && _logs_ui) {
-    QStringList batch = _logs_mg->GetBatch();
+  if (_logs.mg && _logs_ui) {
+    QStringList batch = _logs.mg->GetBatch();
 
     while (!batch.isEmpty())
       _logs_ui->append(batch.takeFirst());
