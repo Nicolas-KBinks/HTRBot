@@ -11,6 +11,7 @@ MWin::MWin(QWidget *parent)
   ui->setupUi(this);
 
   this->Create_LogsManager();
+  this->Create_DatabaseManager();
   this->Create_NetworkAccessManager();
   this->Create_SessionManager();
 
@@ -35,10 +36,10 @@ MWin::MWin(QWidget *parent)
 
 MWin::~MWin()
 {
-  this->Destroy_Manager(_logs.th);
   this->Destroy_Manager(_session.th);
   this->Destroy_Manager(_netmg.th);
-
+  this->Destroy_Manager(_db.th);
+  this->Destroy_Manager(_logs.th);
 
   delete ui;
 }
@@ -90,6 +91,20 @@ void MWin::Create_NetworkAccessManager()
 
   _netmg.mg->moveToThread(_netmg.th);
   _netmg.th->start();
+}
+
+void MWin::Create_DatabaseManager()
+{
+  _db.th = new QThread();
+  _db.mg = new DatabaseManager();
+
+  connect(_db.th, &QThread::finished, _db.mg, &DatabaseManager::deleteLater);
+  connect(_db.mg, &DatabaseManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
+
+  _db.mg->moveToThread(_db.th);
+  _db.th->start();
+
+  QTimer::singleShot(0, _db.mg, &DatabaseManager::SL_Init);
 }
 
 

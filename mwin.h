@@ -15,6 +15,7 @@
 
 #include "Logs/logsmanager.h"
 #include "Session/sessionmanager.h"
+#include "Database/databasemanager.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -40,6 +41,7 @@ private:
   void Create_LogsManager();
   void Create_SessionManager();
   void Create_NetworkAccessManager();
+  void Create_DatabaseManager();
 
   void Destroy_Manager(QThread *th);
 
@@ -65,5 +67,10 @@ private:
     QThread *th = nullptr;
     QNetworkAccessManager *mg = nullptr;
   } _netmg;
+
+  struct {
+    QThread *th = nullptr;
+    DatabaseManager *mg = nullptr;
+  } _db;
 };
 #endif // MWIN_H
