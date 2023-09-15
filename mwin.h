@@ -38,10 +38,14 @@ private slots:
 private:
   // -- functions -- //
   void Create_LogsManager();
-  void Destroy_LogsManager();
-
   void Create_SessionManager();
+  void Create_NetworkAccessManager();
+
+  void Destroy_LogsManager();
   void Destroy_SessionManager();
+  void Destroy_NetworkAccessManager();
+
+
 
   // -- variables -- //
   Ui::MWin *ui;
@@ -59,7 +63,9 @@ private:
     SessionManager  *mg = nullptr;
   } _session;
 
-  QNetworkAccessManager *_netmg = nullptr;
-  SessionManager *_session_mg = nullptr;
+  struct {
+    QThread *th = nullptr;
+    QNetworkAccessManager *mg = nullptr;
+  } _netmg;
 };
 #endif // MWIN_H

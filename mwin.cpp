@@ -10,10 +10,10 @@ MWin::MWin(QWidget *parent)
 {
   ui->setupUi(this);
 
-  _netmg = new QNetworkAccessManager(this);
-
   this->Create_LogsManager();
+  this->Create_NetworkAccessManager();
   this->Create_SessionManager();
+
 
   // create MWin UI:
   _lay = new QGridLayout();
@@ -25,17 +25,18 @@ MWin::MWin(QWidget *parent)
 
 
   // test session create:
-  QTimer::singleShot(5000, _session_mg, std::bind(&SessionManager::SL_Create, _session_mg,
+  QTimer::singleShot(5000, _session.mg, std::bind(&SessionManager::SL_Create, _session.mg,
                                                   "", "", false));
 
   // test session logout:
-  QTimer::singleShot(10000, _session_mg, &SessionManager::SL_Logout);
+  QTimer::singleShot(10000, _session.mg, &SessionManager::SL_Logout);
 }
 
 
 MWin::~MWin()
 {
   this->Destroy_SessionManager();
+  this->Destroy_NetworkAccessManager();
   this->Destroy_LogsManager();
 
   delete ui;
@@ -62,6 +63,35 @@ void MWin::Create_LogsManager()
   _logs.tm->start();
 }
 
+void MWin::Create_SessionManager()
+{
+  if (_session.th && _session.mg)
+    return;
+
+  _session.th = new QThread();
+  _session.mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg.mg), nullptr);
+
+  connect(_session.th, &QThread::finished, _session.mg, &SessionManager::deleteLater);
+  connect(_session.mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
+
+  _session.mg->moveToThread(_session.th);
+  _session.th->start();
+
+  QTimer::singleShot(0, _session.mg, &SessionManager::SL_Init);
+}
+
+void MWin::Create_NetworkAccessManager()
+{
+  _netmg.th = new QThread();
+  _netmg.mg = new QNetworkAccessManager();
+
+  connect(_netmg.th, &QThread::finished, _netmg.mg, &QNetworkAccessManager::deleteLater);
+
+  _netmg.mg->moveToThread(_netmg.th);
+  _netmg.th->start();
+}
+
+
 void MWin::Destroy_LogsManager()
 {
   if (_logs.th) {
@@ -75,25 +105,6 @@ void MWin::Destroy_LogsManager()
   }
 }
 
-
-
-void MWin::Create_SessionManager()
-{
-  if (_session.th && _session.mg)
-    return;
-
-  _session.th = new QThread();
-  _session.mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg), nullptr);
-
-  connect(_session.th, &QThread::finished, _session.mg, &SessionManager::deleteLater);
-  connect(_session.mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
-
-  _session.mg->moveToThread(_session.th);
-  _session.th->start();
-
-  QTimer::singleShot(0, _session.mg, &SessionManager::SL_Init);
-}
-
 void MWin::Destroy_SessionManager()
 {
   if (_session.th) {
@@ -104,6 +115,19 @@ void MWin::Destroy_SessionManager()
 
     delete _session.th;
     _session.th = nullptr;
+  }
+}
+
+void MWin::Destroy_NetworkAccessManager()
+{
+  if (_netmg.th) {
+    if (_netmg.th->isRunning()) {
+      _netmg.th->quit();
+      _netmg.th->wait();
+    }
+
+    delete _netmg.th;
+    _netmg.th = nullptr;
   }
 }
 
