@@ -41,9 +41,7 @@ private:
   void Create_SessionManager();
   void Create_NetworkAccessManager();
 
-  void Destroy_LogsManager();
-  void Destroy_SessionManager();
-  void Destroy_NetworkAccessManager();
+  void Destroy_Manager(QThread *th);
 
 
 

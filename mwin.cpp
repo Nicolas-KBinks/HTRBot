@@ -35,9 +35,10 @@ MWin::MWin(QWidget *parent)
 
 MWin::~MWin()
 {
-  this->Destroy_SessionManager();
-  this->Destroy_NetworkAccessManager();
-  this->Destroy_LogsManager();
+  this->Destroy_Manager(_logs.th);
+  this->Destroy_Manager(_session.th);
+  this->Destroy_Manager(_netmg.th);
+
 
   delete ui;
 }
@@ -92,45 +93,18 @@ void MWin::Create_NetworkAccessManager()
 }
 
 
-void MWin::Destroy_LogsManager()
+void MWin::Destroy_Manager(QThread *th)
 {
-  if (_logs.th) {
-    if (_logs.th->isRunning()) {
-      _logs.th->quit();
-      _logs.th->wait();
+    if (th) {
+      if (th->isRunning()) {
+        th->quit();
+        th->wait();
+      }
+
+      delete th;
+      th = nullptr;
     }
-
-    delete _logs.th;
-    _logs.th = nullptr;
-  }
 }
-
-void MWin::Destroy_SessionManager()
-{
-  if (_session.th) {
-    if (_session.th->isRunning()) {
-      _session.th->quit();
-      _session.th->wait();
-    }
-
-    delete _session.th;
-    _session.th = nullptr;
-  }
-}
-
-void MWin::Destroy_NetworkAccessManager()
-{
-  if (_netmg.th) {
-    if (_netmg.th->isRunning()) {
-      _netmg.th->quit();
-      _netmg.th->wait();
-    }
-
-    delete _netmg.th;
-    _netmg.th = nullptr;
-  }
-}
-
 
 
 void MWin::SL_ProcessLogsBatch()
