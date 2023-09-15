@@ -19,6 +19,3 @@
   - [ ] add basic interface to allow user to enter his account credentials
     - [ ] implement functionnality to encrypted user datas
     - [ ] implement communications with database module to store user datas
-
-
-![screenshot_001](/screenshots/screenshot_001.png)
