@@ -11,8 +11,8 @@
     - [x] switch active account
     - [x] logout session
   - [x] create and implement basic logs system
-  - [ ] move logs manager to a separate thread
-  - [ ] move session manager to a separate thread
+  - [x] move logs manager to a separate thread
+  - [x] move session manager to a separate thread
   - [x] move logs manager to a separate thread
   - [x] move session manager to a separate thread
   - [x] move network manager to a separate thread
