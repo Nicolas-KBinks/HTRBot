@@ -18,12 +18,12 @@
 #include <QJsonArray>
 #include <QJsonValue>
 
-#include "log.h"
-#include "account.h"
+#include "Logs/log.h"
+#include "Account/account.h"
 
 
 #define DEMO_URL_API "https://demo-api-capital.backend-capital.com/"
-#define API_KEY "CWL338744FMDHVhQ"
+#define API_KEY ""
 
 
 class SessionManager : public QObject

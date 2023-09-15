@@ -2,7 +2,7 @@
 #define LOGSMANAGER_H
 
 #include <QObject>
-#include <QSharedPointer>
+#include <QMutex>
 
 #include "log.h"
 
@@ -22,6 +22,7 @@ public slots:
 
 
 private:
+  QMutex _mtx;
   QList<Log*> _logs;
 };
 

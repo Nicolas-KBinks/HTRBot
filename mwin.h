@@ -13,8 +13,8 @@
 #include <QThread>
 #include <QTimer>
 
-#include "logsmanager.h"
-#include "sessionmanager.h"
+#include "Logs/logsmanager.h"
+#include "Session/sessionmanager.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -36,14 +36,34 @@ private slots:
 
 
 private:
+  // -- functions -- //
+  void Create_LogsManager();
+  void Create_SessionManager();
+  void Create_NetworkAccessManager();
+
+  void Destroy_Manager(QThread *th);
+
+
+
+  // -- variables -- //
   Ui::MWin *ui;
   QGridLayout *_lay = nullptr;
   QTextEdit *_logs_ui = nullptr;
 
-  LogsManager *_logs_mg = nullptr;
-  QTimer *_logs_timer = nullptr;
+  struct {
+    QThread     *th = nullptr;
+    QTimer      *tm = nullptr;
+    LogsManager *mg = nullptr;
+  } _logs;
 
-  QNetworkAccessManager *_netmg = nullptr;
-  SessionManager *_session_mg = nullptr;
+  struct {
+    QThread         *th = nullptr;
+    SessionManager  *mg = nullptr;
+  } _session;
+
+  struct {
+    QThread *th = nullptr;
+    QNetworkAccessManager *mg = nullptr;
+  } _netmg;
 };
 #endif // MWIN_H

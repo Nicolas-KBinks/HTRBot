@@ -22,8 +22,15 @@ void LogsManager::SL_AddLog(const Log::TYPE &type, const QByteArray &content, co
 {
   Log *lg = new Log(type, content, timestamp, this);
 
-  if (lg)
-    _logs.append(lg);
+  if (lg) {
+    if (_mtx.try_lock()) {
+      _logs.append(lg);
+      _mtx.unlock();
+    } else {
+      delete lg;
+      lg = nullptr;
+    }
+  }
 }
 
 
@@ -33,20 +40,27 @@ QStringList LogsManager::GetBatch()
 
   for (int n = 0; n < 10; n++) {
     if (!_logs.isEmpty()) {
-      Log *lg = _logs.takeFirst();
 
-      if (!lg)
-        continue;
+      if (_mtx.try_lock()) {
+        Log *lg = _logs.takeFirst();
 
-      batch.append( QString("[ %1 ][ %2 ] : %3")
-                       .arg(QDateTime::fromMSecsSinceEpoch(lg->GetTimestamp()).toString("yyyy/MM/dd | hh:mm:ss.zzz"),
-                       logs_typeStrings.value(lg->GetType()))
-                       .arg(lg->GetContent()) );
+        if (!lg) {
+          _mtx.unlock();
+          continue;
+        }
 
-      delete lg;
-      lg = nullptr;
-    }
-  }
+        batch.append( QString("[ %1 ][ %2 ] : %3")
+                         .arg(QDateTime::fromMSecsSinceEpoch(lg->GetTimestamp()).toString("yyyy/MM/dd | hh:mm:ss.zzz"),
+                              logs_typeStrings.value(lg->GetType()))
+                         .arg(lg->GetContent()) );
+
+        delete lg;
+        lg = nullptr;
+        _mtx.unlock();
+      } // end of mutex try lock
+
+    } // end of check logs not empty
+  } // end of for n < 10 loop
 
   return batch;
 }

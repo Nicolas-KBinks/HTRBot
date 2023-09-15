@@ -20,8 +20,6 @@ public:
   };
 
 
-
-
   explicit Log(QObject *parent = nullptr);
   Log(const Log::TYPE &type, const QByteArray &content, const qint64 &timestamp = QDateTime::currentMSecsSinceEpoch(),
       QObject *parent = nullptr);
