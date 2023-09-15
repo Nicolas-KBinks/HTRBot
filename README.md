@@ -11,13 +11,8 @@
     - [x] switch active account
     - [x] logout session
   - [x] create and implement basic logs system
-<<<<<<< HEAD
   - [ ] move logs manager to a separate thread
   - [ ] move session manager to a separate thread
-
-
-![screenshot_001](/screenshots/screenshot_001.png)
-=======
   - [x] move logs manager to a separate thread
   - [x] move session manager to a separate thread
   - [x] move network manager to a separate thread
@@ -26,4 +21,3 @@
   - [ ] add basic interface to allow user to enter his account credentials
     - [ ] implement functionnality to encrypt user datas
     - [ ] implement communications with database module to store user datas
->>>>>>> dev
