@@ -10,3 +10,15 @@
     - [x] get session details
     - [x] switch active account
     - [x] logout session
+  - [x] create and implement basic logs system
+  - [x] move logs manager to a separate thread
+  - [x] move session manager to a separate thread
+  - [ ] move network manager to a separate thread
+  - [ ] create first iteration of database using LiteSQL
+  - [ ] create first iteration of encryption
+  - [ ] add basic interface to allow user to enter his account credentials
+    - [ ] implement functionnality to encrypted user datas
+    - [ ] implement communications with database module to store user datas
+
+
+![screenshot_001](/screenshots/screenshot_001.png)
