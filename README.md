@@ -16,7 +16,7 @@
   - [x] move logs manager to a separate thread
   - [x] move session manager to a separate thread
   - [x] move network manager to a separate thread
-  - [ ] create first iteration of database using LiteSQL
+  - [x] create first iteration of database using LiteSQL
   - [ ] create first iteration of encryption
   - [ ] add basic interface to allow user to enter his account credentials
     - [ ] implement functionnality to encrypt user datas
