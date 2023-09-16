@@ -13,6 +13,7 @@
 #include <QThread>
 #include <QTimer>
 
+#include "Encryption/encryptionmanager.h"
 #include "Logs/logsmanager.h"
 #include "Session/sessionmanager.h"
 #include "Database/databasemanager.h"
@@ -42,15 +43,21 @@ private:
   void Create_SessionManager();
   void Create_NetworkAccessManager();
   void Create_DatabaseManager();
+  void Create_EncryptionManager();
 
   void Destroy_Manager(QThread *th);
 
 
 
   // -- variables -- //
-  Ui::MWin *ui;
+  Ui::MWin    *ui;
   QGridLayout *_lay = nullptr;
-  QTextEdit *_logs_ui = nullptr;
+  QTextEdit   *_logs_ui = nullptr;
+
+  struct {
+    QThread           *th = nullptr;
+    EncryptionManager *mg = nullptr;
+  } _encryption;
 
   struct {
     QThread     *th = nullptr;
@@ -64,12 +71,12 @@ private:
   } _session;
 
   struct {
-    QThread *th = nullptr;
+    QThread               *th = nullptr;
     QNetworkAccessManager *mg = nullptr;
   } _netmg;
 
   struct {
-    QThread *th = nullptr;
+    QThread         *th = nullptr;
     DatabaseManager *mg = nullptr;
   } _db;
 };

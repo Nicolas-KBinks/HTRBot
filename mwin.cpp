@@ -11,6 +11,7 @@ MWin::MWin(QWidget *parent)
   ui->setupUi(this);
 
   this->Create_LogsManager();
+  this->Create_EncryptionManager();
   this->Create_DatabaseManager();
   this->Create_NetworkAccessManager();
   this->Create_SessionManager();
@@ -39,6 +40,7 @@ MWin::~MWin()
   this->Destroy_Manager(_session.th);
   this->Destroy_Manager(_netmg.th);
   this->Destroy_Manager(_db.th);
+  this->Destroy_Manager(_encryption.th);
   this->Destroy_Manager(_logs.th);
 
   delete ui;
@@ -104,7 +106,23 @@ void MWin::Create_DatabaseManager()
   _db.mg->moveToThread(_db.th);
   _db.th->start();
 
-  QTimer::singleShot(0, _db.mg, &DatabaseManager::SL_Init);
+  QTimer::singleShot(0, _db.mg,
+                     std::bind(&DatabaseManager::SL_Init, _db.mg, QSharedPointer<EncryptionManager*>::create(_encryption.mg))
+                     );
+}
+
+void MWin::Create_EncryptionManager()
+{
+  _encryption.th = new QThread();
+  _encryption.mg = new EncryptionManager();
+
+  connect(_encryption.th, &QThread::finished, _encryption.mg, &EncryptionManager::deleteLater);
+  connect(_encryption.mg, &EncryptionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
+
+  _encryption.mg->moveToThread(_encryption.th);
+  _encryption.th->start();
+
+  QTimer::singleShot(0, _encryption.mg, &EncryptionManager::SL_Init);
 }
 
 
