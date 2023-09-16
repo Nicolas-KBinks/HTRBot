@@ -1,3 +1,4 @@
 HTRBot.pro
 HTRBot.pro.user
-cert/
+cert/*
+cert/ca/*
