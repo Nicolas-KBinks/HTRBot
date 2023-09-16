@@ -13,8 +13,6 @@
   - [x] create and implement basic logs system
   - [x] move logs manager to a separate thread
   - [x] move session manager to a separate thread
-  - [x] move logs manager to a separate thread
-  - [x] move session manager to a separate thread
   - [x] move network manager to a separate thread
   - [x] create first iteration of database using LiteSQL
   - [x] create first iteration of encryption
