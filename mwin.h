@@ -7,9 +7,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTextEdit>
+#include <QLineEdit>
 
 #include <QNetworkAccessManager>
-
 #include <QThread>
 #include <QTimer>
 
@@ -39,6 +39,8 @@ private slots:
 
 private:
   // -- functions -- //
+  void BuildUI();
+
   void Create_LogsManager();
   void Create_SessionManager();
   void Create_NetworkAccessManager();
@@ -53,6 +55,14 @@ private:
   Ui::MWin    *ui;
   QGridLayout *_lay = nullptr;
   QTextEdit   *_logs_ui = nullptr;
+
+  struct {
+    QHBoxLayout *lay = nullptr;
+    struct {
+      QLabel *lb = nullptr;
+      QLineEdit *fd = nullptr;
+    } id, pwd;
+  } _cred_fields;
 
   struct {
     QThread           *th = nullptr;

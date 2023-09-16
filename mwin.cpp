@@ -16,15 +16,7 @@ MWin::MWin(QWidget *parent)
   this->Create_NetworkAccessManager();
   this->Create_SessionManager();
 
-
-  // create MWin UI:
-  _lay = new QGridLayout();
-  this->centralWidget()->setLayout(_lay);
-
-  _logs_ui = new QTextEdit();
-  _logs_ui->setReadOnly(true);
-  _lay->addWidget(_logs_ui, 0, 0, 1, 1);
-
+  this->BuildUI();
 
   // test session create:
   QTimer::singleShot(5000, _session.mg, std::bind(&SessionManager::SL_Create, _session.mg,
@@ -44,6 +36,35 @@ MWin::~MWin()
   this->Destroy_Manager(_logs.th);
 
   delete ui;
+}
+
+
+void MWin::BuildUI()
+{
+  // create MWin UI:
+  _lay = new QGridLayout();
+  this->centralWidget()->setLayout(_lay);
+
+  // user credentials UI:
+  _cred_fields = {
+                  new QHBoxLayout(),
+                  {new QLabel("ID:"), new QLineEdit()},
+                  {new QLabel("Password:"), new QLineEdit()},
+                  };
+
+  _cred_fields.pwd.fd->setEchoMode(QLineEdit::Password);
+
+  _cred_fields.lay->addWidget(_cred_fields.id.lb);
+  _cred_fields.lay->addWidget(_cred_fields.id.fd);
+  _cred_fields.lay->addWidget(_cred_fields.pwd.lb);
+  _cred_fields.lay->addWidget(_cred_fields.pwd.fd);
+
+  _lay->addLayout(_cred_fields.lay, 0, 0, 1, 1);
+
+  // logs UI:
+  _logs_ui = new QTextEdit();
+  _logs_ui->setReadOnly(true);
+  _lay->addWidget(_logs_ui, 1, 0, 1, 1);
 }
 
 
