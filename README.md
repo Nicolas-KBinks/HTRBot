@@ -17,5 +17,6 @@
   - [x] create first iteration of database using LiteSQL
   - [x] create first iteration of encryption
   - [ ] add basic interface to allow user to enter his account credentials
+    - [x] create UI elements for credentials id and password
     - [ ] implement functionnality to encrypt user datas
     - [ ] implement communications with database module to store user datas
