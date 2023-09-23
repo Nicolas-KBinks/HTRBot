@@ -222,8 +222,8 @@ void SessionManager::HandleNetReply_EncryptionKey(QNetworkReply *rep)
     QJsonObject obj = doc.object();
     _encryption_key = obj.value("encryptionKey").toString().toUtf8();
 
-    if (!_encryption_mg.isNull())
-      (*_encryption_mg.data())->SetEncryptionKey(_encryption_key);
+    /*if (!_encryption_mg.isNull())
+      (*_encryption_mg.data())->SetEncryptionKey(_encryption_key);*/
   }
 
   _current_req = REQUEST_CODE::NONE;

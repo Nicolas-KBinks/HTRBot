@@ -17,13 +17,6 @@ MWin::MWin(QWidget *parent)
   this->Create_SessionManager();
 
   this->BuildUI();
-
-  // test session create:
-  QTimer::singleShot(5000, _session.mg, std::bind(&SessionManager::SL_Create, _session.mg,
-                                                  "", "", false));
-
-  // test session logout:
-  QTimer::singleShot(10000, _session.mg, &SessionManager::SL_Logout);
 }
 
 
@@ -46,20 +39,14 @@ void MWin::BuildUI()
   this->centralWidget()->setLayout(_lay);
 
   // user credentials UI:
-  _cred_fields = {
-                  new QHBoxLayout(),
-                  {new QLabel("ID:"), new QLineEdit()},
-                  {new QLabel("Password:"), new QLineEdit()},
-                  };
+  _ident_ui = new IdentityUI();
+  _ident_ui->BuildUI();
+  _ident_ui->SetCurrentForm(IdentityUI::FORM_REFS::CREATE);
 
-  _cred_fields.pwd.fd->setEchoMode(QLineEdit::Password);
+  connect(_ident_ui, &IdentityUI::SI_ReqCreateIdentity, this, &MWin::SL_OnReqCreateIdentity);
+  connect(_ident_ui, &IdentityUI::SI_ReqSaveIdentity, this, &MWin::SL_OnReqSaveIdentity);
 
-  _cred_fields.lay->addWidget(_cred_fields.id.lb);
-  _cred_fields.lay->addWidget(_cred_fields.id.fd);
-  _cred_fields.lay->addWidget(_cred_fields.pwd.lb);
-  _cred_fields.lay->addWidget(_cred_fields.pwd.fd);
-
-  _lay->addLayout(_cred_fields.lay, 0, 0, 1, 1);
+  _lay->addWidget(_ident_ui, 0, 0, 1, 1);
 
   // logs UI:
   _logs_ui = new QTextEdit();
@@ -79,6 +66,7 @@ void MWin::Create_LogsManager()
 
   connect(_logs.th, &QThread::finished, _logs.tm, &QTimer::deleteLater);
   connect(_logs.th, &QThread::finished, _logs.mg, &LogsManager::deleteLater);
+
   connect(_logs.tm, &QTimer::timeout, this, &MWin::SL_ProcessLogsBatch);
 
   _logs.tm->setInterval(5);
@@ -94,7 +82,7 @@ void MWin::Create_SessionManager()
     return;
 
   _session.th = new QThread();
-  _session.mg = new SessionManager(QSharedPointer<QNetworkAccessManager*>::create(_netmg.mg), nullptr);
+  _session.mg = new SessionManager(nullptr);
 
   connect(_session.th, &QThread::finished, _session.mg, &SessionManager::deleteLater);
   connect(_session.mg, &SessionManager::SI_AddLog, _logs.mg, &LogsManager::SL_AddLog);
@@ -127,9 +115,9 @@ void MWin::Create_DatabaseManager()
   _db.mg->moveToThread(_db.th);
   _db.th->start();
 
-  QTimer::singleShot(0, _db.mg,
+  /*QTimer::singleShot(0, _db.mg,
                      std::bind(&DatabaseManager::SL_Init, _db.mg, QSharedPointer<EncryptionManager*>::create(_encryption.mg))
-                     );
+                     );*/
 }
 
 void MWin::Create_EncryptionManager()
@@ -149,15 +137,15 @@ void MWin::Create_EncryptionManager()
 
 void MWin::Destroy_Manager(QThread *th)
 {
-    if (th) {
-      if (th->isRunning()) {
-        th->quit();
-        th->wait();
-      }
-
-      delete th;
-      th = nullptr;
+  if (th) {
+    if (th->isRunning()) {
+      th->quit();
+      th->wait();
     }
+
+    delete th;
+    th = nullptr;
+  }
 }
 
 
@@ -169,4 +157,57 @@ void MWin::SL_ProcessLogsBatch()
     while (!batch.isEmpty())
       _logs_ui->append(batch.takeFirst());
   }
+}
+
+/* handles signal SI_ReqCreateUser from IdentityUI */
+void MWin::SL_OnReqCreateIdentity(Identity *ident)
+{
+  if (!ident)
+    return;
+
+  // send signal directly to database manager
+  // db manager send reply to session manager to request encryption_key
+  // session manager send reply with key to IdentityUI
+  // IdentityUI add created identity to its list
+
+  QTimer::singleShot(0, _logs.mg, std::bind(&LogsManager::SL_AddLog, _logs.mg,
+                                            Log::TYPE::DBG,
+                                            QString("<p><em>create identity</em><br />"
+                                                    "ident.id = %1<br />ident.cre_id = %2<br />ident.cred_pwd = %3<br />"
+                                                    "ident.api_key = %4<br />ident.encryption_key = %5</p>")
+                                                .arg(ident->GetID())
+                                                .arg(ident->GetCredentials().first,
+                                                     ident->GetCredentials().second,
+                                                     ident->GetKeys().first,
+                                                     ident->GetKeys().second)
+                                                .toUtf8(), QDateTime::currentMSecsSinceEpoch()) );
+
+  QTimer::singleShot(0, _ident_ui, std::bind(&IdentityUI::SL_AddIdentityToList, _ident_ui, ident));
+}
+
+/* handles signal SI_ReqSaveUser from IdentityUI */
+void MWin::SL_OnReqSaveIdentity(Identity *ident)
+{
+  if (!ident)
+    return;
+
+  // send signal directly to database manager
+  // if identity datas have changed:
+  //   db send reply to session manager to request a new encryption key
+  //   session manager send reply with key to IdentityUI
+  //   IdentityUI updates identity datas
+  // if identity datas haven't changed:
+  //   db send reply to IdentityUI
+
+  QTimer::singleShot(0, _logs.mg, std::bind(&LogsManager::SL_AddLog, _logs.mg,
+                                            Log::TYPE::DBG,
+                                            QString("<p><em>save identity</em><br />"
+                                                    "ident.id = %1<br />ident.cre_id = %2<br />ident.cred_pwd = %3<br />"
+                                                    "ident.api_key = %4<br />ident.encryption_key = %5</p>")
+                                                .arg(ident->GetID())
+                                                .arg(ident->GetCredentials().first,
+                                                     ident->GetCredentials().second,
+                                                     ident->GetKeys().first,
+                                                     ident->GetKeys().second)
+                                                .toUtf8(), QDateTime::currentMSecsSinceEpoch()) );
 }

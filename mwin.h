@@ -17,6 +17,7 @@
 #include "Logs/logsmanager.h"
 #include "Session/sessionmanager.h"
 #include "Database/databasemanager.h"
+#include "Identity/identityui.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -35,6 +36,9 @@ public:
 
 private slots:
   void SL_ProcessLogsBatch();
+
+  void SL_OnReqCreateIdentity(Identity *ident);
+  void SL_OnReqSaveIdentity(Identity *ident);
 
 
 private:
@@ -55,6 +59,7 @@ private:
   Ui::MWin    *ui;
   QGridLayout *_lay = nullptr;
   QTextEdit   *_logs_ui = nullptr;
+  IdentityUI  *_ident_ui = nullptr;
 
   struct {
     QHBoxLayout *lay = nullptr;
