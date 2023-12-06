@@ -44,6 +44,7 @@ private slots:
 private:
   // -- functions -- //
   void BuildUI();
+  void ConnectObjects();
 
   void Create_LogsManager();
   void Create_SessionManager();

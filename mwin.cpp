@@ -17,6 +17,8 @@ MWin::MWin(QWidget *parent)
   this->Create_SessionManager();
 
   this->BuildUI();
+
+  this->ConnectObjects();
 }
 
 
@@ -52,6 +54,19 @@ void MWin::BuildUI()
   _logs_ui = new QTextEdit();
   _logs_ui->setReadOnly(true);
   _lay->addWidget(_logs_ui, 1, 0, 1, 1);
+}
+
+void MWin::ConnectObjects()
+{
+  // IdentityUI -> DatabaseManager:
+  connect(_ident_ui, &IdentityUI::SI_ReqCreateIdentity, _db.mg, &DatabaseManager::CreateIdentity);
+  connect(_ident_ui, &IdentityUI::SI_ReqSaveIdentity, _db.mg, &DatabaseManager::SaveIdentity);
+
+  // DatabaseManager -> SessionManager:
+  connect(_db.mg, &DatabaseManager::SI_IdentityCreated, _session.mg, &SessionManager::SL_OnIdentityCreated);
+
+  // DatabaseManager -> IdentityUI:
+  connect(_db.mg, &DatabaseManager::SI_IdentitySaved, _ident_ui, &IdentityUI::SL_OnIdentitySaved);
 }
 
 
@@ -196,7 +211,7 @@ void MWin::SL_OnReqSaveIdentity(Identity *ident)
   //   db send reply to session manager to request a new encryption key
   //   session manager send reply with key to IdentityUI
   //   IdentityUI updates identity datas
-  // if identity datas haven't changed:
+  // if identity datas didn't changed:
   //   db send reply to IdentityUI
 
   QTimer::singleShot(0, _logs.mg, std::bind(&LogsManager::SL_AddLog, _logs.mg,
