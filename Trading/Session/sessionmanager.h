@@ -21,6 +21,7 @@
 #include "Logs/log.h"
 #include "Trading/Accounts/account.h"
 #include "Encryption/encryptionmanager.h"
+#include "Identity/identity.h"
 
 
 #define DEMO_URL_API "https://demo-api-capital.backend-capital.com/"
@@ -64,12 +65,13 @@ signals:
 
 public slots:
   void SL_Init();
-
-  void RequestEncryptionKey();
+  void SL_OnIdentityCreated(Identity *ident);
   void SL_Create(const QByteArray &identifier, const QByteArray &pwd, const bool &isEncrypted);
   void SL_Details();
   void SL_Switch(const QSharedPointer<Account*> &account);
   void SL_Logout();
+
+  void RequestEncryptionKey();
 
 
 private slots:

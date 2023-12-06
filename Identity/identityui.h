@@ -30,6 +30,7 @@ signals:
 
 public slots:
   void SL_AddIdentityToList(Identity *ident);
+  void SL_OnIdentitySaved(Identity *ident);
 
 private slots:
   void SL_OnBT_Create();

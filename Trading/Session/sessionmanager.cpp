@@ -19,13 +19,18 @@ SessionManager::SessionManager(QNetworkAccessManager *netmg, EncryptionManager *
 
 /* ================ public slots ================ */
 
+void SessionManager::SL_OnIdentityCreated(Identity *ident)
+{
+  if (!ident)
+    return;
+}
+
+
 // initialize session manager:
 void SessionManager::SL_Init()
 {
   if (_initialized)
     return;
-
-  emit SI_AddLog(Log::TYPE::INFO, "intializing session manager..", QDateTime::currentMSecsSinceEpoch());
 
   if (_netmg) {
     connect(_netmg, &QNetworkAccessManager::finished, this, &SessionManager::SL_OnNetMG_Finished);

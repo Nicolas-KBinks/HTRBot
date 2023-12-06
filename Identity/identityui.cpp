@@ -77,6 +77,12 @@ void IdentityUI::SL_AddIdentityToList(Identity *ident)
   _idents_list.fd->addItem(itm);
 }
 
+void IdentityUI::SL_OnIdentitySaved(Identity *ident)
+{
+  if (!ident)
+    return;
+}
+
 void IdentityUI::SL_OnBT_Create()
 {
   Identity *ident = new Identity(_cred_id.fd->text().toUtf8(),
