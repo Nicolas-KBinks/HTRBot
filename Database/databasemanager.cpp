@@ -64,31 +64,48 @@ void DatabaseManager::CreateTables()
   }
 }
 
-void DatabaseManager::User_Insert(const QByteArray &cred_id_encrypted, const QByteArray &cred_pwd_encrypted)
+void DatabaseManager::CreateIdentity(Identity *ident)
 {
   _query.clear();
 
-  if (_query.prepare(_queries.value(QUERIES_REFS::INSERT_USER))) {
-    _query.bindValue(":cred_id", cred_id_encrypted);
-    _query.bindValue(":cred_pwd", cred_pwd_encrypted);
+  if (!ident)
+    return;
 
-    _query.exec();
+  if (_query.prepare(_queries.value(QUERIES_REFS::INSERT_USER))) {
+    _query.bindValue(":cred_id", ident->GetCredentials().first);
+    _query.bindValue(":cred_pwd", ident->GetCredentials().second);
+    _query.bindValue(":api_key", ident->GetKeys().first);
+
+    if (_query.exec()) {
+      ident->SetID(_query.lastInsertId().toLongLong());
+      emit SI_IdentityCreated(ident);
+    } else {
+      emit SI_AddLog(Log::TYPE::ERROR,
+                     QString("DB_ERROR : failed to create identity <strong>%1</strong>").arg(ident->GetCredentials().first).toUtf8(),
+                     QDateTime::currentMSecsSinceEpoch());
+    }
   }
 }
 
-QList<DatabaseManager::S_UserDatas> DatabaseManager::User_LoadAll()
+void DatabaseManager::SaveIdentity(Identity *ident)
 {
   _query.clear();
-  QList<S_UserDatas> ret;
 
-  if (_query.prepare(_queries.value(QUERIES_REFS::LOADALL_USERS)) && _query.exec()) {
-    while (_query.next())
-      ret.append({
-          _query.value("id").toLongLong(),
-          _query.value("cred_id").toByteArray(),
-          _query.value("cred_pwd").toByteArray()
-      });
+  if (!ident)
+    return;
+
+  if (_query.prepare(_queries.value(QUERIES_REFS::SAVE_USER))) {
+    _query.bindValue(":id", ident->GetID());
+    _query.bindValue(":cred_id", ident->GetCredentials().first);
+    _query.bindValue(":cred_pwd", ident->GetCredentials().second);
+    _query.bindValue(":api_key", ident->GetKeys().first);
+
+    if (_query.exec()) {
+      emit SI_IdentitySaved(ident);
+    } else {
+      emit SI_AddLog(Log::TYPE::ERROR,
+                     QString("DB_ERROR : failed to save identity <strong>%1</strong>").arg(ident->GetCredentials().first).toUtf8(),
+                     QDateTime::currentMSecsSinceEpoch());
+    }
   }
-
-  return ret;
 }

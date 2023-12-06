@@ -10,6 +10,7 @@
 
 #include "Logs/log.h"
 #include "Encryption/encryptionmanager.h"
+#include "Identity/identity.h"
 
 
 enum class QUERIES_REFS {
@@ -39,17 +40,15 @@ public:
   explicit DatabaseManager(QObject *parent = nullptr);
   ~DatabaseManager();
 
-  void User_Insert(const QByteArray &cred_id_encrypted, const QByteArray &cred_pwd_encypted);
-  QList<DatabaseManager::S_UserDatas> User_LoadAll();
-
-
 signals:
   void SI_AddLog(const Log::TYPE &type, const QByteArray &content, const qint64 &timestamp);
-
+  void SI_IdentityCreated(Identity *ident);
+  void SI_IdentitySaved(Identity *ident);
 
 public slots:
   void SL_Init(const QSharedPointer<EncryptionManager*> &ptr_enc);
-
+  void CreateIdentity(Identity *ident);
+  void SaveIdentity(Identity *ident);
 
 private:
   // -- functions -- //
